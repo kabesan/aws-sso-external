@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -23,6 +24,12 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
+
+var userDataDir string
+
+func init() {
+	flag.StringVar(&userDataDir, "user-data-dir", "", "user data directory for chrome")
+}
 
 type SAMLResponse struct {
 	Assertion Assertion
@@ -54,11 +61,12 @@ type Credentials struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	flag.Parse()
+	if flag.NArg() == 0 {
 		panic("invalid args")
 	}
 
-	targetURL := os.Args[1]
+	targetURL := flag.Arg(0)
 	cachePath := getCacheFilePath(targetURL)
 	creds, err := readCredentialsCache(cachePath)
 	if err != nil {
@@ -72,6 +80,9 @@ func main() {
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.NoFirstRun,
 		chromedp.NoDefaultBrowserCheck,
+	}
+	if userDataDir != "" {
+		opts = append(opts, chromedp.UserDataDir(userDataDir))
 	}
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
