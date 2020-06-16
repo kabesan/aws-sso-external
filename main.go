@@ -170,10 +170,13 @@ func main() {
 func getCacheFilePath(targetURL string) string {
 	urlSHA1 := sha1.Sum([]byte(targetURL))
 	cacheFileName := hex.EncodeToString(urlSHA1[:]) + ".json"
-	homeDir, _ := os.UserHomeDir()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
 	cacheDirPath := filepath.Join(homeDir, ".aws", "cli", "cache")
-	if _, err := os.Stat(cacheDirPath); os.IsNotExist(err) {
-		_ = os.MkdirAll(cacheDirPath, 0755)
+	if err := os.MkdirAll(cacheDirPath, 0755); err != nil && !os.IsExist(err) {
+		panic(err)
 	}
 	return filepath.Join(cacheDirPath, cacheFileName)
 }
