@@ -25,10 +25,18 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-var userDataDir string
+const (
+	defaultSessionDurationHours = 1
+)
+
+var (
+	userDataDir          string
+	sessionDurationHours int
+)
 
 func init() {
 	flag.StringVar(&userDataDir, "user-data-dir", "", "user data directory for chrome")
+	flag.IntVar(&sessionDurationHours, "session-duration-hours", defaultSessionDurationHours, "assume role session duration")
 }
 
 type SAMLResponse struct {
@@ -152,10 +160,12 @@ func main() {
 
 		ses := session.Must(session.NewSession())
 		stsAPI := sts.New(ses)
+
 		out, err := stsAPI.AssumeRoleWithSAML(&sts.AssumeRoleWithSAMLInput{
-			PrincipalArn:  aws.String(principalArn),
-			RoleArn:       aws.String(roleArn),
-			SAMLAssertion: aws.String(base64SAMLResponse),
+			PrincipalArn:    aws.String(principalArn),
+			RoleArn:         aws.String(roleArn),
+			SAMLAssertion:   aws.String(base64SAMLResponse),
+			DurationSeconds: aws.Int64(int64(sessionDurationHours) * 60 * 60),
 		})
 		if err != nil {
 			panic(err)
