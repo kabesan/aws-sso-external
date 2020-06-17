@@ -26,17 +26,17 @@ import (
 )
 
 const (
-	defaultSessionDurationHours = 1
+	defaultSessionDuration = 1 * time.Hour
 )
 
 var (
-	userDataDir          string
-	sessionDurationHours int
+	userDataDir     string
+	sessionDuration time.Duration
 )
 
 func init() {
 	flag.StringVar(&userDataDir, "user-data-dir", "", "user data directory for chrome")
-	flag.IntVar(&sessionDurationHours, "session-duration-hours", defaultSessionDurationHours, "assume role session duration")
+	flag.DurationVar(&sessionDuration, "session-duration", defaultSessionDuration, "assume role session duration")
 }
 
 type SAMLResponse struct {
@@ -160,12 +160,11 @@ func main() {
 
 		ses := session.Must(session.NewSession())
 		stsAPI := sts.New(ses)
-
 		out, err := stsAPI.AssumeRoleWithSAML(&sts.AssumeRoleWithSAMLInput{
 			PrincipalArn:    aws.String(principalArn),
 			RoleArn:         aws.String(roleArn),
 			SAMLAssertion:   aws.String(base64SAMLResponse),
-			DurationSeconds: aws.Int64(int64(sessionDurationHours) * 60 * 60),
+			DurationSeconds: aws.Int64(int64(sessionDuration / time.Second)),
 		})
 		if err != nil {
 			panic(err)
