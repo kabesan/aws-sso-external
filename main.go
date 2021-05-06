@@ -10,7 +10,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -202,13 +201,7 @@ func getCacheFilePath(targetURL string) string {
 }
 
 func readCredentialsCache(cacheFilePath string) (*Credentials, error) {
-	f, err := os.OpenFile(cacheFilePath, os.O_RDONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	bytes, err := ioutil.ReadAll(f)
+	bytes, err := os.ReadFile(cacheFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -233,17 +226,11 @@ func readCredentialsCache(cacheFilePath string) (*Credentials, error) {
 }
 
 func writeCredentialsCache(cacheFilePath string, creds *Credentials) error {
-	f, err := os.OpenFile(cacheFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	bytes, err := json.Marshal(creds)
 	if err != nil {
 		return err
 	}
-	if _, err := f.Write(bytes); err != nil {
+	if err := os.WriteFile(cacheFilePath, bytes, 0600); err != nil {
 		return err
 	}
 
