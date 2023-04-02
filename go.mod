@@ -1,6 +1,6 @@
 module github.com/kabesan/aws-sso-external
 
-go 1.17
+go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.38.51
