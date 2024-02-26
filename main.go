@@ -18,9 +18,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
@@ -158,13 +158,17 @@ func main() {
 			panic(errors.New("invalid SAMLResponse"))
 		}
 
-		ses := session.Must(session.NewSession())
-		stsAPI := sts.New(ses)
-		out, err := stsAPI.AssumeRoleWithSAML(&sts.AssumeRoleWithSAMLInput{
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			panic(err)
+		}
+		stsAPI := sts.NewFromConfig(cfg)
+
+		out, err := stsAPI.AssumeRoleWithSAML(ctx, &sts.AssumeRoleWithSAMLInput{
 			PrincipalArn:    aws.String(principalArn),
 			RoleArn:         aws.String(roleArn),
 			SAMLAssertion:   aws.String(base64SAMLResponse),
-			DurationSeconds: aws.Int64(int64(sessionDuration / time.Second)),
+			DurationSeconds: aws.Int32(int32(sessionDuration / time.Second)),
 		})
 		if err != nil {
 			panic(err)
